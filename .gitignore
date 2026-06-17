@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+app.db
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Uploaded files and exports (user data, not source)
+/uploads/
+/exports/

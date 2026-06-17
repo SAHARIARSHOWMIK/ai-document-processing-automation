@@ -1,0 +1,80 @@
+# Full local stack: PostgreSQL + FastAPI backend + Streamlit dashboard.
+#
+# Quick start (no credentials needed - runs in demo mode):
+#   docker compose up --build
+#
+# Then open:
+#   Dashboard: http://localhost:8501
+#   API docs:  http://localhost:8000/docs
+#
+# To run against real Tesseract OCR / Anthropic AI, set DEMO_MODE=false and
+# provide ANTHROPIC_API_KEY below (or via a .env file - docker compose loads
+# .env automatically). Tesseract itself is already installed in the backend
+# image (see Dockerfile), so real OCR works in this stack even with
+# DEMO_MODE=false - unlike Project 1's Gmail OAuth, there's no interactive
+# login step here, so this is safe to run in any environment, including the
+# cloud demo, if you want real OCR/AI behavior.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: doc_automation
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: "AI Invoice & Document Processing Automation System"
+      ENV: production
+      DEMO_MODE: ${DEMO_MODE:-true}
+      DATABASE_URL: postgresql://app:app@db:5432/doc_automation
+      UPLOAD_DIR: /app/uploads
+      EXPORT_DIR: /app/exports
+      MAX_UPLOAD_SIZE_MB: ${MAX_UPLOAD_SIZE_MB:-10}
+      ALLOWED_FILE_TYPES: ${ALLOWED_FILE_TYPES:-pdf,png,jpg,jpeg}
+      CLASSIFICATION_AUTO_THRESHOLD: ${CLASSIFICATION_AUTO_THRESHOLD:-0.80}
+      CLASSIFICATION_REVIEW_THRESHOLD: ${CLASSIFICATION_REVIEW_THRESHOLD:-0.60}
+      HIGH_AMOUNT_WARNING_THRESHOLD: ${HIGH_AMOUNT_WARNING_THRESHOLD:-10000}
+      VALID_CURRENCIES: ${VALID_CURRENCIES:-MYR,USD,SGD}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+    volumes:
+      - uploads_data:/app/uploads
+      - exports_data:/app/exports
+    ports:
+      - "8000:8000"
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      API_BASE_URL: http://backend:8000
+    ports:
+      - "8501:8501"
+
+volumes:
+  pgdata:
+  uploads_data:
+  exports_data:
