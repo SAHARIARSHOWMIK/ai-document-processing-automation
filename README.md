@@ -346,23 +346,6 @@ For OCR outside Docker, install Tesseract locally. Docker support includes OCR d
 
 ---
 
-## Resume-ready summary
-
-```text
-Built a human-in-the-loop AI document processing automation system using FastAPI,
-Streamlit, SQLAlchemy, OCR/PDF text extraction, structured LLM extraction,
-validation rules, and CSV/JSON export.
-
-Designed a safe document lifecycle that extracts invoice, receipt, purchase order,
-and contract fields, validates business rules, blocks approval on errors, supports
-human correction, exports only approved records, and records every operation in an
-audit log.
-
-Implemented demo mode, SQLite/PostgreSQL support, Docker deployment, Swagger API
-documentation, CI-ready tests, and a recruiter-friendly dashboard with screenshots.
-```
-
----
 
 ## License
 
